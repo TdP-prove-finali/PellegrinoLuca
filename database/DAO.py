@@ -8,7 +8,7 @@ class DAO():
 
     @staticmethod
     def getLevel():
-        conn = DBConnect().get_connection()
+        conn = DBConnect.get_connection()
         result = []
         cursor = conn.cursor()
         query = """select distinct e.`Difficulty Level` from exercises e order by FIELD(e.`Difficulty Level`, 'beginner', 'intermediate', 'advanced')"""
@@ -23,7 +23,7 @@ class DAO():
 
     @staticmethod
     def getMuscle():
-        conn = DBConnect().get_connection()
+        conn = DBConnect.get_connection()
         allMusclesRipetuti = []
         allMuscle = []
         cursor = conn.cursor()
@@ -46,7 +46,7 @@ class DAO():
 
     @staticmethod
     def getAllExercises():
-        conn = DBConnect().get_connection()
+        conn = DBConnect.get_connection()
         result = []
         cursor = conn.cursor(dictionary=True)
         query = """select * from exercises e"""
