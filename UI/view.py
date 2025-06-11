@@ -53,9 +53,13 @@ class View(ft.UserControl):
         self._controller.fillDDlevel()
         self._controller.fillDDmuscleGroup()
 
-        # Pulsante
+        # Pulsanti
         self.btnVistaLista = ft.ElevatedButton(
             text="Vedi esercizi", on_click=self.controller.handleEsercizi
+        )
+
+        self.btnReset = ft.ElevatedButton(
+            text="Reset Filtri", on_click=self.controller.handleReset
         )
 
         # Lista esercizi
@@ -72,7 +76,7 @@ class View(ft.UserControl):
                 controls=[
                     ft.Row([ft.Text("Sezione ricerca", color="blue", size=24, weight="bold")]),
                     ft.Row([self.ddlevel, self.ddmuscleGroup], spacing=10),
-                    ft.Row([self.btnVistaLista]),
+                    ft.Row([self.btnVistaLista, self.btnReset], spacing=10),
                     ft.Row([self.listaEserc], expand=True)
                 ],
                 spacing=15,

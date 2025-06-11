@@ -6,6 +6,8 @@ class Controller:
         self._view = view
         # the model, which implements the logic of the program and holds the data
         self._model = model
+        self.muscolo = None
+        self.livello = None
 
 
     def fillDDlevel(self):
@@ -41,5 +43,25 @@ class Controller:
         else:
             for es in elencoEsercizi:
                 self._view.listaEserc.controls.append(ft.Text(es))
-        self._view.update()
+        self._view.update_page()
+
+    def handleReset(self,e):
+
+        self.livello = None
+        self.muscolo = None
+
+        self._view.ddlevel.value = None
+        self._view.ddlevel.update()
+
+        self._view.ddmuscleGroup.value = None
+        self._view.ddmuscleGroup.update()
+
+        self._view.listaEserc.controls.clear()
+        self._view.listaEserc.controls.append(
+            ft.Text("Elenco esercizi:", color="blue")
+        )
+
+        self._view.update_page()
+
+
 
