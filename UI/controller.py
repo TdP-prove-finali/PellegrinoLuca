@@ -8,6 +8,8 @@ class Controller:
         self._model = model
         self.muscolo = None
         self.livello = None
+        self.esercizio = None
+        self.listaNonDesiderati = []
 
 
     def fillDDlevel(self):
@@ -35,14 +37,25 @@ class Controller:
         else:
             self.muscolo = self._view.ddmuscleGroup.value
 
-    def handleEsercizi(self,e):
+    def handleEsercizi(self, e):
+        elenco = self._model.getEsercizi(self.livello, self.muscolo)
+
         self._view.listaEserc.controls.clear()
-        elencoEsercizi =self._model.getEsercizi(self.livello, self.muscolo)
-        if len(elencoEsercizi) == 0:
+        self.currentExercises = elenco
+
+        if not elenco:
             self._view.listaEserc.controls.append(ft.Text("Non ci sono esercizi con questi filtri"))
         else:
-            for es in elencoEsercizi:
-                self._view.listaEserc.controls.append(ft.Text(es))
+            for es in elenco:
+                self._view.listaEserc.controls.append(ft.Text(es.name))
+
+        dd = self._view.ddExercise
+        dd.options.clear()
+        for es in elenco:
+            dd.options.append(ft.dropdown.Option(es.id, es.name))
+        dd.value = None
+        dd.update()
+
         self._view.update_page()
 
     def handleReset(self,e):
@@ -56,12 +69,26 @@ class Controller:
         self._view.ddmuscleGroup.value = None
         self._view.ddmuscleGroup.update()
 
+        self._view.ddExercise.value = None
+        self._view.ddExercise.options.clear()
+        self._view.ddExercise.update()
+
         self._view.listaEserc.controls.clear()
         self._view.listaEserc.controls.append(
             ft.Text("Elenco esercizi:", color="blue")
         )
 
         self._view.update_page()
+
+    def leggiddEsercizio(self, e):
+        selected_id = self._view.ddExercise.value
+        if selected_id is None:
+            self.esercizio = None
+        else:
+            self.esercizio = self._model.mapExercisesDistinct[selected_id]
+
+    def handleAddUndesired(self,e):
+        self.listaNonDesiderati.append(self.esercizio)
 
 
 

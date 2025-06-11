@@ -4,7 +4,10 @@ import networkx as nx
 
 class Model:
     def __init__(self):
-        pass
+        self.listaExercisesDistinct = DAO.getDistinctExercises()
+        self.mapExercisesDistinct = {}
+        for e in self.listaExercisesDistinct:
+            self.mapExercisesDistinct[e.id] = e
 
     def getLivelli(self):
         return DAO.getLevel()
