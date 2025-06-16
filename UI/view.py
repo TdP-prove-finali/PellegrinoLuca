@@ -24,6 +24,15 @@ class View(ft.UserControl):
         self.btnAddToUndesired = None
         self.listaUndesiderata = None
         self.ddUndesired = None
+        self.btnRemoveUndesired = None
+        self.btnClearUndesired = None
+
+        self.ddLevelTab2 = None
+        self.ddNumWorkout = None
+        self.tfTime = None
+        self.ddFocus = None
+        self.btnGenerateWork = None
+        self.listPlane = None
 
     def load_interface(self):
         self.tabs = ft.Tabs(
@@ -48,7 +57,7 @@ class View(ft.UserControl):
         self._page.update()
 
     def creaTab1(self):
-        # --- colonna sinistra: filtri + lista Esercizi ---
+        # colonna sinistra: filtri + lista Esercizi
         # Dropdown filtri
         self.ddlevel = ft.Dropdown(label="Livello",
                                    on_change=self._controller.leggiddLevel)
@@ -84,45 +93,60 @@ class View(ft.UserControl):
             spacing=15
         )
 
-        #colonna destra
+        # colonna destra: gestione lista non desiderati
         self.ddExercise = ft.Dropdown(
             label="Seleziona esercizio",
             options=[],
-            width=220,
+            width=260,
             on_change=self._controller.leggiddEsercizio
         )
-        # Pulsante per aggiungere a non desiderati
         self.btnAddToUndesired = ft.ElevatedButton(
             text="Aggiungi a non desiderati",
             on_click=self._controller.handleAddUndesired
         )
-        # ListView non desiderati
         self.listaUndesiderata = ft.ListView(
             controls=[ft.Text("Elenco non desiderati:", color="red")],
             expand=True,
             spacing=8,
             auto_scroll=True
         )
-        # Dropdown non desiderati
         self.ddUndesired = ft.Dropdown(
-            label="Non desiderata",
+            label="Esercizi non desiderati",
             options=[],
-            width=200
+            width=260
+        )
+        self.btnRemoveUndesired = ft.ElevatedButton(
+            text="Rimuovi selezionato",
+            on_click=self._controller.handleRemoveUndesired
+        )
+        self.btnClearUndesidered = ft.ElevatedButton(
+            text="Svuota lista",
+            on_click=self._controller.handleClearUndesired
         )
 
         right_column = ft.Column(
             controls=[
                 ft.Text("Gestione esercizi non desiderati", color="red", size=24, weight="bold"),
-                self.ddExercise,
-                self.btnAddToUndesired,
+
+                ft.Row(
+                    controls=[self.ddExercise, self.btnAddToUndesired],
+                    spacing=10
+                ),
+
                 self.listaUndesiderata,
-                self.ddUndesired
+
+                ft.Row(
+                    controls=[self.ddUndesired,
+                              self.btnRemoveUndesired,
+                              self.btnClearUndesidered],
+                    spacing=10
+                ),
             ],
             expand=True,
             spacing=15
         )
 
-        # impaginazione finale: sinistra vs destra
+        # impaginazione finale: sinistra e destra della tab1
         return ft.Container(
             padding=ft.padding.all(10),
             content=ft.Row(
@@ -137,7 +161,66 @@ class View(ft.UserControl):
         )
 
     def creaTab2(self):
-        pass
+        # Titolo tab
+        self.titleTab2 = ft.Text("Piano d'allenamento", color="green", size=24)
+
+        #ROW1
+        # Dropdown e TextField
+        self.ddLevelTab2 = ft.Dropdown(label="Livello")
+        self.ddNumWorkout = ft.Dropdown(label="Num. allenamenti/sett")
+        self.tfTime = ft.TextField(label="Limite durata allenamento (in minuti)")
+
+        row1 = ft.Row(
+            controls=[self.ddLevelTab2, self.ddNumWorkout, self.tfTime],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+
+        self._controller.fillDDlevelPlane()
+        self._controller.fillDDnumWorkout()
+
+        #ROW2
+        # Obiettivo
+        self.ddFocus = ft.Dropdown(label="Obiettivo")
+        row2 = ft.Row(
+            controls=[self.ddFocus],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+
+        self._controller.fillDDfocus()
+
+        #ROW3
+        # Pulsante genera
+        self.btnGenerateWork = ft.ElevatedButton(text="Genera allenamento",
+                                                 on_click=self._controller.handlePlane)
+        row3 = ft.Row(
+            controls=[self.btnGenerateWork],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+
+        # ListView per visualizzare il piano
+        self.listPlane = ft.ListView(
+            expand=True,
+            auto_scroll=True
+        )
+
+        # Impaginazione finale tab2
+        return ft.Container(
+            padding=ft.padding.all(10),
+            content=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=[self.titleTab2],
+                        alignment=ft.MainAxisAlignment.CENTER
+                    ),
+                    row1,
+                    row2,
+                    row3,
+                    self.listPlane
+                ],
+                spacing=15,
+                expand=True
+            )
+        )
 
     @property
     def controller(self):
@@ -151,9 +234,19 @@ class View(ft.UserControl):
         self._controller = controller
 
     def create_alert(self, message):
-        dlg = ft.AlertDialog(title=ft.text(message))
+        dlg = ft.AlertDialog(
+            title=ft.Text("Attenzione"),
+            content=ft.Text(message),
+            actions=[
+                ft.TextButton("OK", on_click=lambda e: self._close_alert())
+            ]
+        )
         self._page.dialog = dlg
         dlg.open = True
+        self._page.update()
+
+    def _close_alert(self):
+        self._page.dialog.open = False
         self._page.update()
 
     def update_page(self):
