@@ -166,6 +166,34 @@ class DAO():
         """
         return DAO._fetch_exercises(query, (livello, muscolo))
 
+    @staticmethod
+    def getExercisesLevel(level):
+        conn = DBConnect.get_connection()
+        result = []
+        cursor = conn.cursor(dictionary=True)
+        query = """SELECT e.*
+                    FROM exercises AS e
+                    WHERE `Difficulty Level` = %s"""
+        cursor.execute(query, (level,))
+
+        for row in cursor:
+            result.append(Esercizio(
+                name=row["Name of Exercise"],
+                sets=row["Sets"],
+                reps=row["Reps"],
+                benefit=row["Benefit"],
+                calories30min=row["Burns Calories (per 30 min)"],
+                muscleGroup=row["Target Muscle Group"],
+                equipment=row["Equipment Needed"],
+                level=row["Difficulty Level"],
+                id=row["id_exercise"]
+            ))
+
+        cursor.close()
+        conn.close()
+
+        return result
+
 
 
 

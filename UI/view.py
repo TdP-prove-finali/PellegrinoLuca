@@ -9,7 +9,6 @@ class View(ft.UserControl):
         self._page.horizontal_alignment = 'CENTER'
         self._page.theme_mode = ft.ThemeMode.LIGHT
 
-
         self.tabs = None
         self.tab1 = None
         self.tab2 = None
@@ -18,7 +17,6 @@ class View(ft.UserControl):
         self.listaEserc = None
         self.btnVistaLista = None
         self.btnReset = None
-
 
         self.ddExercise = None
         self.btnAddToUndesired = None
@@ -29,7 +27,10 @@ class View(ft.UserControl):
 
         self.ddLevelTab2 = None
         self.ddNumWorkout = None
-        self.tfTime = None
+        # time controls
+        self.lblTime = None
+        self.sliderTime = None
+        self.rowTimeLimits = None
         self.ddFocus = None
         self.btnGenerateWork = None
         self.listPlane = None
@@ -164,22 +165,46 @@ class View(ft.UserControl):
         # Titolo tab
         self.titleTab2 = ft.Text("Piano d'allenamento", color="green", size=24)
 
-        #ROW1
-        # Dropdown e TextField
+        # ROW1: Dropdowns e slider per il tempo
         self.ddLevelTab2 = ft.Dropdown(label="Livello")
         self.ddNumWorkout = ft.Dropdown(label="Num. allenamenti/sett")
-        self.tfTime = ft.TextField(label="Limite durata allenamento (in minuti)")
+
+        # label sempre visibile sopra lo slider
+        self.lblTime = ft.Text("Durata allenamento: 0 min", size=16)
+        # slider per selezionare il tempo
+        self.sliderTime = ft.Slider(
+            min=0,
+            max=60,
+            divisions=60,
+            value=0,
+            on_change=self._controller.leggiddTime
+        )
+        # valori limite sotto lo slider
+        self.rowTimeLimits = ft.Row(
+            controls=[
+                ft.Text("0 min"),
+                ft.Text("60 min")
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            width=200
+        )
 
         row1 = ft.Row(
-            controls=[self.ddLevelTab2, self.ddNumWorkout, self.tfTime],
+            controls=[
+                self.ddLevelTab2,
+                self.ddNumWorkout,
+                ft.Column(
+                    controls=[self.lblTime, self.sliderTime, self.rowTimeLimits],
+                    spacing=2
+                )
+            ],
             alignment=ft.MainAxisAlignment.CENTER
         )
 
         self._controller.fillDDlevelPlane()
         self._controller.fillDDnumWorkout()
 
-        #ROW2
-        # Obiettivo
+        # ROW2: Obiettivo
         self.ddFocus = ft.Dropdown(label="Obiettivo")
         row2 = ft.Row(
             controls=[self.ddFocus],
@@ -188,10 +213,11 @@ class View(ft.UserControl):
 
         self._controller.fillDDfocus()
 
-        #ROW3
-        # Pulsante genera
-        self.btnGenerateWork = ft.ElevatedButton(text="Genera allenamento",
-                                                 on_click=self._controller.handlePlane)
+        # ROW3: Pulsante genera
+        self.btnGenerateWork = ft.ElevatedButton(
+            text="Genera allenamento",
+            on_click=self._controller.handlePlane
+        )
         row3 = ft.Row(
             controls=[self.btnGenerateWork],
             alignment=ft.MainAxisAlignment.CENTER

@@ -191,7 +191,7 @@ class Controller:
         self._view.update_page()
 
     def fillDDnumWorkout(self):
-        for i in range(1, 8):
+        for i in range(1,6):
             self._view.ddNumWorkout.options.append(
                 ft.dropdown.Option(text=str(i), key=i)
             )
@@ -217,8 +217,89 @@ class Controller:
             self._view.create_alert("Selezionando aumento forza il programma creerà un piano bilanciato, volto a minimizzare il numero di ripetizioni,"
                                     "permettendo l'utilizzo di carichi maggiori")
 
+    def leggiddTime(self, e):
+        # e.control.value è un float, arrotondiamolo ad intero:
+        timeWork_min = int(e.control.value)
+        # salvalo per handlePlane
+        self.timeWork_min = timeWork_min
+        # aggiorna la label sopra lo slider
+        self._view.lblTime.value = f"Durata allenamento: {timeWork_min} min"
+        self._view.lblTime.update()
+
     def handlePlane(self,e):
-        pass
+
+        level = self._view.ddLevelTab2.value
+        if not level:
+            self._view.create_alert("Seleziona un livello.")
+            return
+
+        try:
+            numDay = int(self._view.ddNumWorkout.value)
+        except (TypeError, ValueError):
+            self._view.create_alert("Seleziona un numero di allenamenti valido.")
+            return
+
+        if getattr(self, "timeWork_min", 0) == 0:
+            self._view.create_alert("Seleziona un tempo di allenamento maggiore di 0.")
+            return
+        timeWork = self.timeWork_min * 60
+
+
+        focus = self._view.ddFocus.value
+        if not focus:
+            self._view.create_alert("Seleziona un obiettivo.")
+            return
+
+
+        listaNonDesiCompleta = []
+        for es in self.listaNonDesiderati:
+            nome = es.name
+            for esercizio in self._model.listaExercises:
+                if nome == esercizio.name:
+                    listaNonDesiCompleta.append(esercizio)
+
+
+        self._model.creaGrafo(level, listaNonDesiCompleta)
+        #prove per verificare durante la creazione del codice
+        print(f"Nodi: {self._model.getNumNodes()}")
+        print(f"Archi: {self._model.getNumEdges()}")
+
+        if self._view.ddFocus.value == "loss":
+
+            self._model.getPathCalories(numDay, timeWork)
+            piano = self._model.pathCalories
+            calorie_totali = self._model.bestCals
+            print(f"{piano}")
+
+            """lp = self._view.listPlane
+            lp.controls.clear()
+
+            if not piano or all(len(g) == 0 for g in piano):
+                lp.controls.append(ft.Text(
+                    "Nessun piano trovato con questi parametri.",
+                    color="red"
+                ))
+            else:
+                for idx, giorno in enumerate(piano, start=1):
+                    giorno_cal = sum(ex.caloriesTot for ex in giorno)
+                    lp.controls.append(
+                        ft.Text(f"Giorno {idx} (tot. {giorno_cal:.1f} cal):",
+                                weight="bold")
+                    )
+                    for ex in giorno:
+                        durata_min = ex.tempoTot // 60
+                        lp.controls.append(
+                            ft.Text(f"• {ex.name} — {durata_min}′ — {ex.caloriesTot:.1f} cal")
+                        )
+                    if idx < len(piano):
+                        lp.controls.append(ft.Divider())
+
+            lp.update()
+            self._view.update_page()"""
+
+
+        elif self._view.ddFocus.value == "strength":
+            self._model.getPathReps(numDay, timeWork)
 
 
 

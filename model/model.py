@@ -1,3 +1,6 @@
+import copy
+import itertools
+
 from database.DAO import DAO
 import networkx as nx
 
@@ -6,8 +9,20 @@ class Model:
     def __init__(self):
         self.listaExercisesDistinct = DAO.getDistinctExercises()
         self.mapExercisesDistinct = {}
+        self.listaExercises = DAO.getAllExercises()
+        self.mapExercises = {}
+
         for e in self.listaExercisesDistinct:
             self.mapExercisesDistinct[e.id] = e
+        for es in self.listaExercises:
+            self.mapExercises[es.id] = es
+
+        self.grafo = nx.Graph()
+
+        self.pathCalories = []
+        self.pathReps = []
+        self.bestCals = 0
+
 
     def getLivelli(self):
         return DAO.getLevel()
@@ -34,6 +49,222 @@ class Model:
 
         # entrambi i filtri
         return DAO.getExercisesByLivelloEMuscolo(livello, muscolo)
+
+    def getAllExercises(self):
+        return DAO.getAllExercises()
+
+    def creaGrafo(self, level, listaNonDesi):
+
+        self.grafo.clear()
+        exercises = DAO.getExercisesLevel(level)
+
+        listaDesiCompl = []
+        for es in exercises:
+            desi = True
+            nome = es.name
+            for esercizio in listaNonDesi:
+                if nome == esercizio.name:
+                    desi = False
+            if desi:
+                listaDesiCompl.append(es)
+
+        self.grafo.add_nodes_from(listaDesiCompl)
+
+
+        edges = [
+            (u, v) for u, v in itertools.combinations(listaDesiCompl, 2)
+            if u.name != v.name
+        ]
+
+        self.grafo.add_edges_from(edges)
+
+
+    def getPathCalories(self,numDay, timeWork):
+        self.pathCalories = [[] for _ in range(numDay)]
+        self.bestCals = [0 for _ in range(numDay)]
+
+        for i in range(1, numDay+1):
+            for n in self.get_nodes():
+
+                check = False
+                for ogg in self.pathCalories:
+                    for eser in ogg:
+                        if eser.id == n.id:
+                            check = True
+                            break
+
+                if not check and i >= 2:
+                    for esercizio in self.pathCalories[i - 2]:
+                        if esercizio.name == n.name:
+                            check = True
+                            break
+
+                if not check:
+                    if n.tempoTot <= timeWork:
+                        partial = []
+                        partial.append(n)
+                        time_used = n.tempoTot
+                        self.ricorsione(partial, i, timeWork, time_used)
+
+    def ricorsione(self, partial, day, timeWork, time_used):
+
+        n_last = partial[-1]
+
+        neighbors = self.getAdmissibleNeighbs(n_last, partial, day, timeWork, time_used)
+
+        if len(neighbors) == 0:
+            cals_accDay = self.calcolaCals(partial)
+            if cals_accDay > self.bestCals[day-1]:
+                self.bestCals[day-1] = cals_accDay + 0.0
+                self.pathCalories[day-1] = partial[:]
+            return
+
+        for n in neighbors:
+            partial.append(n)
+            new_time = time_used + n.tempoTot
+            #time_used += n.tempoTot
+            self.ricorsione(partial, day, timeWork, new_time)
+            partial.pop()
+            #time_used -= n.tempoTot
+
+    def getAdmissibleNeighbs(self, n_last, partial, day, timeWork, time_used):
+
+        all_neigh = list(self.grafo.neighbors(n_last))
+        result = []
+
+        for es in all_neigh:
+            # controllo se es.name è presente in partial
+            skip = False
+            for ogg in self.pathCalories:
+                for eser in ogg:
+                    if eser.id == es.id:
+                        skip = True
+                        break
+
+            if not skip and day >= 2:
+                for esercizio in self.pathCalories[day-2]:
+                    if esercizio.name == es.name:
+                        skip = True
+                        break
+
+            if not skip:
+                for elem in partial:
+                    if elem.name == es.name:
+                        skip = True
+                        break
+
+            if not skip and time_used + es.tempoTot > timeWork:
+                skip = True
+
+            # se non ho trovato alcuna corrispondenza lo aggiungo
+            if not skip:
+                result.append(es)
+
+        return result
+
+
+    def calcolaCals(self, myList):
+        weight = 0
+        for es in myList:
+            weight += es.caloriesTot
+        return weight
+
+
+        """
+        #processo ricorsivo settimanale
+        self.week_rico(
+            day = 0,
+            lastEsDayId = None,
+            plan_parziale = [],
+            cal_acc = 0,
+            numDay = numDay,
+            timeWork = timeWork
+        )
+        return self.pathCalories, self.bestCals
+
+    def week_rico(self, day, lastEsDayId, plan_parziale, cal_acc, numDay, timeWork):
+
+        if day == numDay:
+            if cal_acc > self.bestCals:
+                self.bestCals = cal_acc
+                self.pathCalories = copy.deepcopy(plan_parziale)
+            return
+
+        for n in self.get_nodes():
+            if n.id  == lastEsDayId:
+                continue
+
+            self.day_rico(
+                corrente = n,
+                day = day,
+                lastEsDayId = lastEsDayId,
+                plan_parziale = plan_parziale,
+                cal_acc = cal_acc,
+                time_left = timeWork,
+                numDay = numDay,
+                timeWork = timeWork
+            )
+
+
+    def day_rico(self, corrente, day, lastEsDayId, plan_parziale, cal_acc, time_left, numDay, timeWork):
+
+        if int(time_left) < corrente.tempoTot:
+            return
+
+        time_left -= corrente.tempoTot
+        cal_acc +=corrente.caloriesTot
+
+        if len(plan_parziale) <= day:
+            plan_parziale.append([])
+        plan_parziale[day].append(corrente)
+
+        extended = False
+
+        for vicino in self.grafo.neighbors(corrente):
+            if vicino.name == corrente.name:
+                continue
+            self.day_rico(
+                corrente = vicino,
+                day  = day,
+                lastEsDayId = lastEsDayId,
+                plan_parziale = plan_parziale,
+                cal_acc = cal_acc,
+                time_left = time_left,
+                numDay = numDay,
+                timeWork = timeWork
+            )
+            extended = True
+
+        if not extended:
+            self.week_rico(
+                day+1,
+                corrente.id,
+                plan_parziale,
+                cal_acc,
+                numDay,
+                timeWork
+            )
+
+        plan_parziale[day].pop()
+        """
+
+
+
+
+    def getPathReps(self, numDay, timeWork):
+        self.pathReps = []
+
+    def getNumNodes(self):
+        return len(self.grafo.nodes())
+
+    def getNumEdges(self):
+        return len(self.grafo.edges())
+
+    def get_nodes(self):
+        return self.grafo.nodes()
+
+    def get_edges(self):
+        return self.grafo.edges()
 
 
 

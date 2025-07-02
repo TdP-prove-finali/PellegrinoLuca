@@ -23,8 +23,11 @@ class Esercizio:
         #formula in cui viene diviso il tempo per 1800(secondi presenti in 30 minuti) e poi moltiplicato per il dato forntoci dal database
         self.caloriesTot = (self.tempoTot/1800)*self.calories30min
 
+    def __eq__(self, other):
+        return isinstance(other, Esercizio) and self.id == other.id
+
     def __hash__(self):
-        return hash(self.Id)
+        return hash(self.id)
 
     def __str__(self):
         return f"Esercizio: {self.name}, calorie(per 30 min): {self.calories30min}, livello: {self.level}, muscoli: {self.muscleGroup}"
