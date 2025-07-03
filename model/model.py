@@ -21,7 +21,8 @@ class Model:
 
         self.pathCalories = []
         self.pathReps = []
-        self.bestCals = 0
+        self.bestCals = []
+        self.bestReps = []
 
 
     def getLivelli(self):
@@ -122,10 +123,9 @@ class Model:
         for n in neighbors:
             partial.append(n)
             new_time = time_used + n.tempoTot
-            #time_used += n.tempoTot
             self.ricorsione(partial, day, timeWork, new_time)
             partial.pop()
-            #time_used -= n.tempoTot
+
 
     def getAdmissibleNeighbs(self, n_last, partial, day, timeWork, time_used):
 
@@ -170,89 +170,96 @@ class Model:
         return weight
 
 
-        """
-        #processo ricorsivo settimanale
-        self.week_rico(
-            day = 0,
-            lastEsDayId = None,
-            plan_parziale = [],
-            cal_acc = 0,
-            numDay = numDay,
-            timeWork = timeWork
-        )
-        return self.pathCalories, self.bestCals
-
-    def week_rico(self, day, lastEsDayId, plan_parziale, cal_acc, numDay, timeWork):
-
-        if day == numDay:
-            if cal_acc > self.bestCals:
-                self.bestCals = cal_acc
-                self.pathCalories = copy.deepcopy(plan_parziale)
-            return
-
-        for n in self.get_nodes():
-            if n.id  == lastEsDayId:
-                continue
-
-            self.day_rico(
-                corrente = n,
-                day = day,
-                lastEsDayId = lastEsDayId,
-                plan_parziale = plan_parziale,
-                cal_acc = cal_acc,
-                time_left = timeWork,
-                numDay = numDay,
-                timeWork = timeWork
-            )
-
-
-    def day_rico(self, corrente, day, lastEsDayId, plan_parziale, cal_acc, time_left, numDay, timeWork):
-
-        if int(time_left) < corrente.tempoTot:
-            return
-
-        time_left -= corrente.tempoTot
-        cal_acc +=corrente.caloriesTot
-
-        if len(plan_parziale) <= day:
-            plan_parziale.append([])
-        plan_parziale[day].append(corrente)
-
-        extended = False
-
-        for vicino in self.grafo.neighbors(corrente):
-            if vicino.name == corrente.name:
-                continue
-            self.day_rico(
-                corrente = vicino,
-                day  = day,
-                lastEsDayId = lastEsDayId,
-                plan_parziale = plan_parziale,
-                cal_acc = cal_acc,
-                time_left = time_left,
-                numDay = numDay,
-                timeWork = timeWork
-            )
-            extended = True
-
-        if not extended:
-            self.week_rico(
-                day+1,
-                corrente.id,
-                plan_parziale,
-                cal_acc,
-                numDay,
-                timeWork
-            )
-
-        plan_parziale[day].pop()
-        """
-
-
-
-
     def getPathReps(self, numDay, timeWork):
-        self.pathReps = []
+
+        self.pathReps = [[] for _ in range(numDay)]
+        self.bestReps = [float('inf') for _ in range(numDay)]
+
+        for i in range(1, numDay+1):
+            for n in self.get_nodes():
+
+                check = False
+                for ogg in self.pathReps:
+                    for eser in ogg:
+                        if eser.id == n.id:
+                            check = True
+                            break
+
+                if not check and i >= 2:
+                    for esercizio in self.pathReps[i - 2]:
+                        if esercizio.name == n.name:
+                            check = True
+                            break
+
+                if not check:
+                    if n.tempoTot <= timeWork:
+                        partial = []
+                        partial.append(n)
+                        time_used = n.tempoTot
+                        self.ricorsioneReps(partial, i, timeWork, time_used)
+
+
+    def ricorsioneReps(self,partial, day, timeWork, time_used):
+
+        n_last = partial[-1]
+
+        neighbors = self.getAdmissibleNeighbsReps(n_last, partial, day, timeWork, time_used)
+
+        if len(neighbors) == 0:
+            reps_accDay = self.calcolaReps(partial)
+            if reps_accDay < self.bestReps[day-1]:
+                self.bestReps[day-1] = reps_accDay + 0.0
+                self.pathReps[day-1] = partial[:]
+            return
+
+        for n in neighbors:
+            partial.append(n)
+            new_time = time_used + n.tempoTot
+            self.ricorsioneReps(partial, day, timeWork, new_time)
+            partial.pop()
+
+
+    def getAdmissibleNeighbsReps(self, n_last, partial, day, timeWork, time_used):
+
+        all_neigh = list(self.grafo.neighbors(n_last))
+        result = []
+
+        for es in all_neigh:
+            # controllo se es.name è presente in partial
+            skip = False
+            for ogg in self.pathReps:
+                for eser in ogg:
+                    if eser.id == es.id:
+                        skip = True
+                        break
+
+            if not skip and day >= 2:
+                for esercizio in self.pathReps[day-2]:
+                    if esercizio.name == es.name:
+                        skip = True
+                        break
+
+            if not skip:
+                for elem in partial:
+                    if elem.name == es.name:
+                        skip = True
+                        break
+
+            if not skip and time_used + es.tempoTot > timeWork:
+                skip = True
+
+            # se non ho trovato alcuna corrispondenza lo aggiungo
+            if not skip:
+                result.append(es)
+
+        return result
+
+    def calcolaReps(self, myList):
+        weight = 0
+        for es in myList:
+            weight += es.reps
+        return weight
+
 
     def getNumNodes(self):
         return len(self.grafo.nodes())

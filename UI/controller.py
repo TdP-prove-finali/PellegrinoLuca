@@ -268,10 +268,8 @@ class Controller:
 
             self._model.getPathCalories(numDay, timeWork)
             piano = self._model.pathCalories
-            calorie_totali = self._model.bestCals
-            print(f"{piano}")
 
-            """lp = self._view.listPlane
+            lp = self._view.listPlane
             lp.controls.clear()
 
             if not piano or all(len(g) == 0 for g in piano):
@@ -289,17 +287,46 @@ class Controller:
                     for ex in giorno:
                         durata_min = ex.tempoTot // 60
                         lp.controls.append(
-                            ft.Text(f"• {ex.name} — {durata_min}′ — {ex.caloriesTot:.1f} cal")
+                            ft.Text(f"• {ex.name} — {ex.sets} serie da {ex.reps} ripetizioni — {durata_min}′ — {ex.caloriesTot:.1f} cal — {ex.muscleGroup} — {ex.benefit}")
                         )
                     if idx < len(piano):
                         lp.controls.append(ft.Divider())
 
             lp.update()
-            self._view.update_page()"""
+            self._view.update_page()
 
 
         elif self._view.ddFocus.value == "strength":
             self._model.getPathReps(numDay, timeWork)
+
+            pianoReps = self._model.pathReps
+
+            lp = self._view.listPlane
+            lp.controls.clear()
+
+            if not pianoReps or all(len(g) == 0 for g in pianoReps):
+                lp.controls.append(ft.Text(
+                    "Nessun piano trovato con questi parametri.",
+                    color="red"
+                ))
+
+            else:
+                for idx, giorno in enumerate(pianoReps, start=1):
+                    giorno_rep = sum(ex.reps for ex in giorno)
+                    lp.controls.append(
+                        ft.Text(f"Giorno {idx} (tot. {giorno_rep:.1f} reps):",
+                                weight="bold")
+                    )
+                    for ex in giorno:
+                        durata_min = ex.tempoTot // 60
+                        lp.controls.append(
+                            ft.Text(f"• {ex.name} — {ex.sets} serie da {ex.reps} ripetizioni — {durata_min}′ — {ex.caloriesTot:.1f} cal — {ex.muscleGroup} — {ex.benefit}")
+                        )
+                    if idx < len(pianoReps):
+                        lp.controls.append(ft.Divider())
+
+            lp.update()
+            self._view.update_page()
 
 
 
