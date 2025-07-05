@@ -27,7 +27,7 @@ class View(ft.UserControl):
 
         self.ddLevelTab2 = None
         self.ddNumWorkout = None
-        # time controls
+
         self.lblTime = None
         self.sliderTime = None
         self.rowTimeLimits = None

@@ -133,7 +133,7 @@ class Model:
         result = []
 
         for es in all_neigh:
-            # controllo se es.name è presente in partial
+
             skip = False
             for ogg in self.pathCalories:
                 for eser in ogg:
@@ -225,7 +225,7 @@ class Model:
         result = []
 
         for es in all_neigh:
-            # controllo se es.name è presente in partial
+
             skip = False
             for ogg in self.pathReps:
                 for eser in ogg:
@@ -257,8 +257,8 @@ class Model:
     def calcolaReps(self, myList):
         weight = 0
         for es in myList:
-            weight += es.reps
-        return weight
+            weight += es.punteggioForPath
+        return weight/len(myList)
 
 
     def getNumNodes(self):

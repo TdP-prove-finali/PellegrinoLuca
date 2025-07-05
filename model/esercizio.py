@@ -15,6 +15,7 @@ class Esercizio:
 
     caloriesTot: float = field(init=False)
     tempoTot: int = field(init=False)
+    punteggioForPath: float  =field(init=False)
 
     def __post_init__(self):
         #in secondi (2 minuti per le pause tra una serie e l'altra, 10 s per ogni ripetizione)
@@ -22,6 +23,9 @@ class Esercizio:
 
         #formula in cui viene diviso il tempo per 1800(secondi presenti in 30 minuti) e poi moltiplicato per il dato forntoci dal database
         self.caloriesTot = (self.tempoTot/1800)*self.calories30min
+
+        #punteggio per consentire creazione di piano che favorisca esercizi con più sets e meno reps per lo sviluppo di maggior massa muscolare
+        self.punteggioForPath = self.reps/self.sets + 0.2 * self.reps
 
     def __eq__(self, other):
         return isinstance(other, Esercizio) and self.id == other.id

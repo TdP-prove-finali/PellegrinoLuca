@@ -16,7 +16,7 @@ class DBConnect:
         """Factory method for lending connections from the pool. It also initializes the pool
         if it does not exist
         :param pool_name: name of the pool
-        :param pool_size: number of connections in the pool
+        :param pool_size: number of  connections in the pool
         :return: mysql.connector.connection"""
         if cls._cnxpool is None:
             try:

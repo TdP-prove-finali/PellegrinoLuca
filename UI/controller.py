@@ -103,7 +103,6 @@ class Controller:
             selected_id = int(selected)
             self.esercizio = self._model.mapExercisesDistinct[selected_id]
 
-        #se non hai selezionato nulla
         if self.esercizio is None:
             self._view.create_alert("Seleziona prima un esercizio da aggiungere.")
 
@@ -124,7 +123,7 @@ class Controller:
             ud.options.append(ft.dropdown.Option(self.esercizio.id, self.esercizio.name))
             ud.value = None
             ud.update()
-        #se è già in non_desiderati
+
         else:
             self._view.create_alert(
                 f"L'esercizio “{self.esercizio.name}” è già in lista non desiderata."
@@ -218,11 +217,10 @@ class Controller:
                                     "permettendo l'utilizzo di carichi maggiori")
 
     def leggiddTime(self, e):
-        # e.control.value è un float, arrotondiamolo ad intero:
         timeWork_min = int(e.control.value)
-        # salvalo per handlePlane
+
         self.timeWork_min = timeWork_min
-        # aggiorna la label sopra lo slider
+
         self._view.lblTime.value = f"Durata allenamento: {timeWork_min} min"
         self._view.lblTime.update()
 
@@ -261,8 +259,8 @@ class Controller:
 
         self._model.creaGrafo(level, listaNonDesiCompleta)
         #prove per verificare durante la creazione del codice
-        print(f"Nodi: {self._model.getNumNodes()}")
-        print(f"Archi: {self._model.getNumEdges()}")
+        #print(f"Nodi: {self._model.getNumNodes()}")
+        #print(f"Archi: {self._model.getNumEdges()}")
 
         if self._view.ddFocus.value == "loss":
 
@@ -312,11 +310,16 @@ class Controller:
 
             else:
                 for idx, giorno in enumerate(pianoReps, start=1):
-                    giorno_rep = sum(ex.reps for ex in giorno)
+                    if len(giorno) > 0:
+                        giorno_rep = sum(ex.punteggioForPath for ex in giorno) / len(giorno)
+                    else:
+                        giorno_rep = 0.0
+
                     lp.controls.append(
-                        ft.Text(f"Giorno {idx} (tot. {giorno_rep:.1f} reps):",
+                        ft.Text(f"Giorno {idx} (media punteggio rapporto reps/sets + 0.2×reps: {giorno_rep:.2f}):",
                                 weight="bold")
                     )
+
                     for ex in giorno:
                         durata_min = ex.tempoTot // 60
                         lp.controls.append(
