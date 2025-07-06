@@ -2,7 +2,7 @@
 
 **1.** Effettuare il fork del progetto al seguente link: https://github.com/TdP-prove-finali/PellegrinoLuca
 
-**2.** Importare il progetto nel porprio ambiente di svilippo
+**2.** Importare il progetto nel proprio ambiente di svilippo
 
 **3.** Installare le librerie necessarie indicate nel file Requirements.txt
 
